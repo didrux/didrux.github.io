@@ -12,20 +12,20 @@ const workItems = [
         href: '/work/api-docs-migration',
         emoji: '📘',
     },
-    {
-        title: 'Information architecture overhaul (Confluence)',
-        summary: 'Inventory, taxonomy, templates, ownership & review cadence.',
-        tags: ['IA', 'Governance', 'Confluence'],
-        href: '/work/ia-overhaul', // page you can add later
-        emoji: '🗂️',
-    },
-    {
-        title: 'KB & Tutorials (Phonexa modules)',
-        summary: 'User guides, FAQs, troubleshooting for LMS Sync, Call Logic, E-Delivery.',
-        tags: ['KB', 'Tutorials', 'Troubleshooting'],
-        href: '/work/phonexa-kb', // page you can add later
-        emoji: '🧭',
-    },
+    // {
+    //     title: 'Information architecture overhaul (Confluence)',
+    //     summary: 'Inventory, taxonomy, templates, ownership & review cadence.',
+    //     tags: ['IA', 'Governance', 'Confluence'],
+    //     href: '/work/ia-overhaul', // page you can add later
+    //     emoji: '🗂️',
+    // },
+    // {
+    //     title: 'KB & Tutorials (Phonexa modules)',
+    //     summary: 'User guides, FAQs, troubleshooting for LMS Sync, Call Logic, E-Delivery.',
+    //     tags: ['KB', 'Tutorials', 'Troubleshooting'],
+    //     href: '/work/phonexa-kb', // page you can add later
+    //     emoji: '🧭',
+    // },
     {
         title: 'Developer documentation',
         summary: 'Examples of my developer documentation',
