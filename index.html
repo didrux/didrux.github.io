@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Meeting Cost Timer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        :root {
+            --bg: #f5f5f7;
+            --card-bg: #ffffff;
+            --border: #e0e0e6;
+            --text: #222222;
+            --muted: #666666;
+            --accent: #2563eb;
+            --accent-soft: #e0ecff;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 24px 16px 48px;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin: 0 0 4px;
+        }
+
+        header p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 18px 20px;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+            border: 1px solid var(--border);
+            margin-bottom: 16px;
+        }
+
+        .card h2 {
+            margin: 0 0 8px;
+            font-size: 1.2rem;
+        }
+
+        .card p.small {
+            margin: 0 0 10px;
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        .participants-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 4px;
+            font-size: 0.92rem;
+        }
+
+        .participants-table th,
+        .participants-table td {
+            border-bottom: 1px solid var(--border);
+            padding: 6px 4px;
+            text-align: left;
+        }
+
+        .participants-table th {
+            font-weight: 600;
+            color: var(--muted);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .participants-table input[type="text"],
+        .participants-table input[type="number"],
+        .participants-table select {
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            padding: 6px 8px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            background: #fafafa;
+            outline: none;
+        }
+
+        .participants-table input:focus,
+        .participants-table select:focus,
+        .meeting-input input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px var(--accent-soft);
+            background: #ffffff;
+        }
+
+        .participants-table .remove-row {
+            border-radius: 999px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            color: var(--muted);
+        }
+
+        .participants-table .remove-row:hover {
+            background: #fee2e2;
+            color: var(--danger);
+        }
+
+        .add-participant-btn {
+            margin-top: 8px;
+            border-radius: 999px;
+            border: 1px dashed var(--accent);
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            background: #f9fafb;
+            color: var(--accent);
+            cursor: pointer;
+        }
+
+        .add-participant-btn:hover {
+            background: var(--accent-soft);
+        }
+
+        .meeting-input {
+            margin-top: 8px;
+        }
+
+        .meeting-input label {
+            font-size: 0.9rem;
+            display: inline-flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .meeting-input input[type="number"] {
+            width: 90px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            padding: 6px 8px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            background: #fafafa;
+            outline: none;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-top: 8px;
+            font-size: 0.9rem;
+        }
+
+        .summary-item {
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px dashed var(--border);
+            background: #fafafa;
+        }
+
+        .summary-item .label {
+            color: var(--muted);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 4px;
+        }
+
+        .summary-item .value {
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+
+        .summary-item .value.emphasis {
+            font-size: 1.2rem;
+            color: var(--accent);
+        }
+
+        .note {
+            margin-top: 8px;
+            font-size: 0.78rem;
+            color: var(--muted);
+        }
+
+        .live-display {
+            margin-top: 8px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: #f9fafb;
+            border: 1px solid var(--border);
+        }
+
+        .live-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 4px 0;
+            font-size: 0.95rem;
+        }
+
+        .live-row .label {
+            color: var(--muted);
+            font-size: 0.86rem;
+        }
+
+        .live-row .value {
+            font-weight: 600;
+        }
+
+        .live-row .value.emphasis {
+            font-size: 1.4rem;
+            color: var(--accent);
+        }
+
+        .controls {
+            margin-top: 10px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .controls button {
+            border-radius: 999px;
+            border: none;
+            padding: 7px 16px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        #start-btn {
+            background: var(--accent);
+            color: #ffffff;
+        }
+
+        #pause-btn {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        #reset-btn {
+            background: #f9fafb;
+            color: var(--muted);
+            border: 1px solid var(--border);
+        }
+
+        #start-btn:hover {
+            filter: brightness(1.05);
+        }
+
+        #pause-btn:hover {
+            background: #d1d5db;
+        }
+
+        #reset-btn:hover {
+            background: #f3f4f6;
+        }
+
+        footer {
+            margin-top: 24px;
+            font-size: 0.75rem;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        footer span {
+            font-weight: 500;
+            color: #4b5563;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 16px 8px 32px;
+            }
+
+            .card {
+                padding: 14px 14px;
+            }
+
+            .participants-table th:nth-child(4),
+            .participants-table td:nth-child(4) {
+                width: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Meeting Cost Timer</h1>
+        <p>See how much that “quick sync” really costs – in real time 💸</p>
+    </header>
+
+    <main>
+        <section class="card">
+            <h2>Participants</h2>
+            <p class="small">
+                Add everyone in the meeting and their salary. Monthly is assumed to be a regular work month.
+            </p>
+            <table class="participants-table">
+                <thead>
+                <tr>
+                    <th>Person</th>
+                    <th>Salary (USD)</th>
+                    <th>Period</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody id="participants-body">
+                <!-- rows added by JS -->
+                </tbody>
+            </table>
+            <button id="add-participant" type="button" class="add-participant-btn">
+                + Add participant
+            </button>
+        </section>
+
+        <section class="card">
+            <h2>Meeting settings</h2>
+            <div class="meeting-input">
+                <label>
+                    Planned meeting length:
+                    <input id="meeting-minutes" type="number" min="1" value="30">
+                    <span>minutes</span>
+                </label>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>Planned cost</h2>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="label">If it runs full length</div>
+                    <div class="value emphasis" id="planned-cost">—</div>
+                </div>
+                <div class="summary-item">
+                    <div class="label">Total burn rate</div>
+                    <div class="value" id="hourly-rate">—</div>
+                </div>
+                <div class="summary-item">
+                    <div class="label">Per second</div>
+                    <div class="value" id="per-second-rate">—</div>
+                </div>
+            </div>
+            <p class="note">
+                Assumes <strong>160 working hours / month</strong> and <strong>12 months / year</strong> when converting monthly/yearly salaries.
+            </p>
+        </section>
+
+        <section class="card">
+            <h2>Live meeting cost</h2>
+            <div class="live-display">
+                <div class="live-row">
+                    <span class="label">Elapsed time</span>
+                    <span class="value" id="elapsed-time">00:00:00</span>
+                </div>
+                <div class="live-row">
+                    <span class="label">Money spent so far</span>
+                    <span class="value emphasis" id="live-cost">$0.00</span>
+                </div>
+            </div>
+            <div class="controls">
+                <button id="start-btn" type="button">Start</button>
+                <button id="pause-btn" type="button">Pause</button>
+                <button id="reset-btn" type="button">Reset</button>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        Idea &amp; implementation credit: <span>Mykhailo Ovdiienko (@didrux)</span>
+    </footer>
+</div>
+
+<script>
+    (function () {
+        'use strict';
+
+        const participantsBody = document.getElementById('participants-body');
+        const addParticipantBtn = document.getElementById('add-participant');
+        const meetingMinutesInput = document.getElementById('meeting-minutes');
+
+        const plannedCostEl = document.getElementById('planned-cost');
+        const hourlyRateEl = document.getElementById('hourly-rate');
+        const perSecondRateEl = document.getElementById('per-second-rate');
+
+        const elapsedTimeEl = document.getElementById('elapsed-time');
+        const liveCostEl = document.getElementById('live-cost');
+        const startBtn = document.getElementById('start-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const resetBtn = document.getElementById('reset-btn');
+
+        const WORKING_HOURS_PER_MONTH = 160;
+        const MONTHS_PER_YEAR = 12;
+
+        let isRunning = false;
+        let startTime = null;
+        let elapsedBeforePause = 0; // ms
+        let intervalId = null;
+        let ratePerSecondAtStart = 0;
+
+        function addParticipantRow(name = '', salary = '', period = 'monthly') {
+            const tr = document.createElement('tr');
+            tr.className = 'participant-row';
+            tr.innerHTML = `
+          <td>
+            <input type="text" class="person-name" placeholder="Name" value="${name}">
+          </td>
+          <td>
+            <input type="number" class="person-salary" min="0" step="any" placeholder="5000" value="${salary}">
+          </td>
+          <td>
+            <select class="person-period">
+              <option value="monthly"${period === 'monthly' ? ' selected' : ''}>per month</option>
+              <option value="hourly"${period === 'hourly' ? ' selected' : ''}>per hour</option>
+              <option value="yearly"${period === 'yearly' ? ' selected' : ''}>per year</option>
+            </select>
+          </td>
+          <td>
+            <button type="button" class="remove-row" title="Remove person">✕</button>
+          </td>
+        `;
+            participantsBody.appendChild(tr);
+        }
+
+        function getParticipants() {
+            const rows = participantsBody.querySelectorAll('.participant-row');
+            const participants = [];
+            rows.forEach((row) => {
+                const salaryInput = row.querySelector('.person-salary');
+                const periodSelect = row.querySelector('.person-period');
+
+                const salary = parseFloat(salaryInput.value);
+                const period = periodSelect.value;
+
+                if (!isNaN(salary) && salary > 0) {
+                    participants.push({ salary, period });
+                }
+            });
+            return participants;
+        }
+
+        function salaryToHourly(salary, period) {
+            if (period === 'hourly') {
+                return salary;
+            } else if (period === 'monthly') {
+                return salary / WORKING_HOURS_PER_MONTH;
+            } else if (period === 'yearly') {
+                return salary / (MONTHS_PER_YEAR * WORKING_HOURS_PER_MONTH);
+            }
+            return 0;
+        }
+
+        function computeTotalRatePerSecond() {
+            const participants = getParticipants();
+            let totalHourly = 0;
+            participants.forEach((p) => {
+                totalHourly += salaryToHourly(p.salary, p.period);
+            });
+            const totalPerSecond = totalHourly / 3600;
+            return { totalHourly, totalPerSecond };
+        }
+
+        function formatCurrency(amount) {
+            return amount.toLocaleString('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                maximumFractionDigits: 2
+            });
+        }
+
+        function updatePlannedCost() {
+            const minutes = parseFloat(meetingMinutesInput.value);
+            const durationSeconds =
+                !isNaN(minutes) && minutes > 0 ? minutes * 60 : 0;
+
+            const { totalHourly, totalPerSecond } = computeTotalRatePerSecond();
+            const cost = durationSeconds * totalPerSecond;
+
+            plannedCostEl.textContent =
+                durationSeconds > 0 ? formatCurrency(cost) : '—';
+
+            hourlyRateEl.textContent =
+                totalHourly > 0 ? formatCurrency(totalHourly) + ' / hour' : '—';
+
+            perSecondRateEl.textContent =
+                totalPerSecond > 0
+                    ? formatCurrency(totalPerSecond) + ' / second'
+                    : '—';
+
+            // If timer hasn't started yet, keep live rate in sync
+            if (!isRunning && elapsedBeforePause === 0) {
+                ratePerSecondAtStart = totalPerSecond;
+                updateLiveDisplay();
+            }
+        }
+
+        function formatTime(seconds) {
+            const s = Math.floor(seconds % 60);
+            const m = Math.floor((seconds / 60) % 60);
+            const h = Math.floor(seconds / 3600);
+            const pad = (n) => n.toString().padStart(2, '0');
+            return `${pad(h)}:${pad(m)}:${pad(s)}`;
+        }
+
+        function updateLiveDisplay() {
+            const elapsedMs =
+                isRunning && startTime !== null ? Date.now() - startTime : 0;
+            const totalElapsedSeconds = (elapsedBeforePause + elapsedMs) / 1000;
+            const cost = totalElapsedSeconds * ratePerSecondAtStart;
+
+            elapsedTimeEl.textContent = formatTime(totalElapsedSeconds);
+            liveCostEl.textContent = formatCurrency(cost);
+        }
+
+        function startTimer() {
+            if (isRunning) return;
+
+            const { totalPerSecond } = computeTotalRatePerSecond();
+            ratePerSecondAtStart = totalPerSecond;
+
+            if (ratePerSecondAtStart <= 0) {
+                alert(
+                    'Please enter at least one participant with a salary greater than 0.'
+                );
+                return;
+            }
+
+            startTime = Date.now();
+            isRunning = true;
+
+            if (!intervalId) {
+                intervalId = setInterval(updateLiveDisplay, 100);
+            }
+        }
+
+        function pauseTimer() {
+            if (!isRunning) return;
+            const now = Date.now();
+            elapsedBeforePause += now - startTime;
+            startTime = null;
+            isRunning = false;
+            updateLiveDisplay();
+        }
+
+        function resetTimer() {
+            isRunning = false;
+            startTime = null;
+            elapsedBeforePause = 0;
+            ratePerSecondAtStart = computeTotalRatePerSecond().totalPerSecond;
+            updateLiveDisplay();
+        }
+
+        // Event listeners
+        addParticipantBtn.addEventListener('click', () => {
+            addParticipantRow();
+        });
+
+        participantsBody.addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-row')) {
+                const row = e.target.closest('.participant-row');
+                if (row) {
+                    row.remove();
+                    updatePlannedCost();
+                }
+            }
+        });
+
+        participantsBody.addEventListener('input', () => {
+            updatePlannedCost();
+        });
+
+        meetingMinutesInput.addEventListener('input', () => {
+            updatePlannedCost();
+        });
+
+        startBtn.addEventListener('click', startTimer);
+        pauseBtn.addEventListener('click', pauseTimer);
+        resetBtn.addEventListener('click', resetTimer);
+
+        // Initial setup
+        addParticipantRow('You', '');
+        addParticipantRow();
+        updatePlannedCost();
+        resetTimer();
+    })();
+</script>
+</body>
+</html>

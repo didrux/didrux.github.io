@@ -1,0 +1,265 @@
+---
+title: "API docs migration (Stoplight → ReadMe)"
+description: "Docs-as-code workflow with OpenAPI upgrade, Python cleanup scripts, and CI/CD auto-publish via ReadMe CLI."
+slug: /work/api-docs-migration
+image: /img/work/api-docs-migration/api_docs_main.png
+keywords:
+  - API docs
+  - OpenAPI
+  - ReadMe
+  - CI/CD
+  - docs-as-code
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+{/* 
+Copy the SVG/PNG screenshots into: static/img/work/api-docs-migration/
+and keep the same filenames used below (hero.svg, console.svg, ci-pipeline.svg).
+You can replace these placeholders anytime with real screenshots.
+*/}
+
+# API docs migration (Stoplight → ReadMe)
+
+<div style={{display:'grid', gap:'1rem', marginBottom:'1.2rem'}}>
+  <img
+    src="/img/work/api-docs-migration/api_docs_main.png"
+    alt="ReadMe API docs hero (placeholder)"
+    style={{borderRadius:16, border:'1px solid var(--ifm-toc-border-color)'}}
+  />
+  <div style={{display:'grid', gap:'.5rem'}}>
+    <div style={{display:'flex', flexWrap:'wrap', gap:'.5rem'}}>
+      {/* Authoring & docs */}
+      <span className="badge" style={{background:'#F0E442', color:'#111'}}>docs-as-code</span>
+      <span className="badge" style={{background:'#7F7F7F', color:'#111'}}>Markdown</span>
+
+      {/* Platforms */}
+      <span className="badge" style={{background:'#333', color:'#fff'}}>GitHub</span>
+
+      {/* Automation / DevOps */}
+      <span className="badge" style={{background:'#E69F00', color:'#111'}}>GitHub Actions</span>
+      <span className="badge" style={{background:'#D55E00', color:'#111'}}>CI/CD</span>
+
+      {/* API design & standards */}
+      <span className="badge" style={{background:'#0072B2', color:'#fff'}}>OpenAPI 3</span>
+      <span className="badge" style={{background:'#56B4E9', color:'#111'}}>Swagger</span>
+      <span className="badge" style={{background:'#009E73', color:'#111'}}>Stoplight</span>
+      <span className="badge" style={{background:'#CC79A7', color:'#111'}}>ReadMe</span>
+
+      {/* Languages & data */}
+      <span className="badge" style={{background:'#2F6C8F', color:'#fff'}}>Python</span>
+      <span className="badge" style={{background:'#2F6C8F', color:'#fff'}}>HTML</span>
+      <span className="badge" style={{background:'#2F6C8F', color:'#fff'}}>CSS</span>
+      <span className="badge" style={{background:'#7AA52B', color:'#111'}}>YAML</span>
+
+      {/* Client/testing */}
+      <span className="badge" style={{background:'#E15759', color:'#111'}}>Postman</span>
+    </div>
+  </div>
+</div>
+
+
+## Overview
+
+I led the migration of a large OpenAPI-based documentation system from **Stoplight** to **ReadMe**, introduced a **docs-as-code** workflow, and automated publishing through **GitHub Actions** → **ReadMe CLI**.  
+I also upgraded a deprecated Swagger spec to **OpenAPI 3** and reviewed **190+ endpoints**, normalizing and de-duplicating fields with Python scripts.
+
+**Public sample:** <a href="https://developer.data.world/reference/bulkdeleteproperty-1" target="_blank" rel="noreferrer">Bulk Delete Property endpoint</a>
+
+<Admonition type="note" title="About artifacts">
+Internal repos and configs are not public. The scripts and pipelines shown here are sanitized portfolio examples representing the approach I implemented.
+</Admonition>
+
+---
+
+## Context and Goals
+
+**Problem**:
+
+- Docs built in Stoplight with outdated Swagger.
+- Manual updates → frequent drift from code.
+- No validation/publishing automation.
+
+**Goals**:
+
+- Interactive developer console with “Try it”.
+- Docs-as-code with PR reviews and CI checks.
+- Automated publishing aligned to releases.
+
+
+
+---
+
+## Implementation
+
+### Tooling decision
+
+I evaluated **Redocly** and **ReadMe** against:
+- DX features (interactive console, onboarding)
+- Versioning and CLI automation
+- Contribution friction for engineers and writers
+
+**Decision:** **ReadMe** (OpenAPI-native, “Try it”, solid CLI for CI/CD).
+
+### Spec upgrade & normalization
+
+Upgraded Swagger → **OpenAPI 3**. I wrote Python scripts to normalize and de-duplicate specs:
+- Ensure `operationId` convention and stable tags
+- Remove deprecated or noisy fields
+- Resolve `$ref` issues
+- Apply consistent parameter names and enums
+
+### CI/CD: validate & publish
+
+A **GitHub Actions** workflow validates and publishes to ReadMe when the spec changes in `main`:
+
+```yaml title=".github/workflows/deploy-api-docs.yml"
+name: Deploy API Docs
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "api-specs/**.yaml"
+      - "api-specs/**.yml"
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: pip install pyyaml
+
+      - name: Normalize OpenAPI
+        run: |
+          python scripts/normalize_openapi.py api-specs/openapi.yaml api-specs/openapi.normalized.yaml
+
+      - name: Validate OpenAPI (basic check)
+        run: |
+          python - <<'PY'
+          import yaml
+          with open("api-specs/openapi.normalized.yaml") as f:
+              spec = yaml.safe_load(f)
+          assert 'paths' in spec and spec['paths'], "No paths in spec"
+          print("Spec looks sane.")
+          PY
+
+      - name: Install ReadMe CLI
+        run: npm i -g rdme
+
+      - name: Publish to ReadMe
+        env:
+          README_API_KEY: ${{ secrets.README_API_KEY }}
+        run: rdme openapi api-specs/openapi.normalized.yaml --key $README_API_KEY --version=latest
+```
+
+<Tabs groupId="code">
+<TabItem value="python" label="Python normalizer">
+```python title="scripts/normalize_openapi.py (sanitized example)"
+import sys, yaml, re
+
+def normalize(spec):
+    for path, methods in spec.get('paths', {}).items():
+        for method, op in methods.items():
+            if not isinstance(op, dict): 
+                continue
+            # drop deprecated flag to reduce noise in UI
+            op.pop('deprecated', None)
+
+            # ensure operationId is present and kebab-cased
+            if 'operationId' not in op:
+                safe = re.sub(r'[^a-z0-9]+', '-', f"{method}-{path}".lower()).strip('-')
+                op['operationId'] = safe
+
+            # normalize tags to a stable order
+            tags = op.get('tags', [])
+            op['tags'] = sorted(set(tags), key=str.lower)
+    return spec
+
+if __name__ == "__main__":
+    src, dst = sys.argv[1], sys.argv[2]
+    with open(src, 'r', encoding='utf-8') as f:
+        spec = yaml.safe_load(f)
+    spec = normalize(spec)
+    with open(dst, 'w', encoding='utf-8') as f:
+        yaml.safe_dump(spec, f, sort_keys=False, allow_unicode=True)
+```
+</TabItem>
+<TabItem value="yaml" label="OpenAPI snippet">
+```yaml title="openapi.partial.yaml"
+paths:
+  /v1/properties/bulk-delete:
+    post:
+      operationId: properties-bulk-delete
+      tags: [ properties ]
+      summary: Bulk delete property values
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkDeleteRequest'
+      responses:
+        "202":
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobAccepted'
+```
+</TabItem>
+</Tabs>
+
+<figure>
+  <img src="/img/work/api-docs-migration/ci-pipeline.svg" alt="CI pipeline sketch (placeholder)" style={{borderRadius:12, border:'1px solid var(--ifm-toc-border-color)'}} />
+  <figcaption>Docs-as-code: PR review → validate → publish to ReadMe.</figcaption>
+</figure>
+
+---
+
+## Contribution workflow
+
+1. Engineer updates code and OpenAPI spec (or generated spec).
+2. Open PR → writer/engineer review (lint, links, naming, examples).
+3. CI validates and normalizes spec; comments on failures.
+4. Merge to <code>main</code> → ReadMe CLI publishes the latest version.
+5. Release notes link to the corresponding API changes.
+
+<Admonition type="tip" title="Keep drift low">
+Make spec updates part of “definition of done”. A failing docs check should block merges like any other quality gate.
+</Admonition>
+
+---
+
+## Results
+
+- **Interactive developer docs** with Try-it console.
+- **Zero manual publishing**—CI/CD aligns docs with releases.
+- **Lower drift** thanks to PR checks and scripts.
+- **Shared source of truth**: OpenAPI.
+
+---
+
+## Tech stack
+
+`GitHub`, `GitHub Actions`, `OpenAPI 3`, `ReadMe CLI`, `Python`, `YAML`, `Markdown`, `Postman`
+
+---
+
+## Links
+
+- Public sample endpoint: <a href="https://developer.data.world/reference/bulkdeleteproperty-1" target="_blank" rel="noreferrer">Bulk Delete Property</a>
+
+---
+
+## Takeaways
+
+Treating docs as code (with CI checks and automated publishing) dramatically improves accuracy and velocity. The time invested in **spec hygiene** pays back every release.

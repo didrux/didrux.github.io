@@ -1,0 +1,89 @@
+---
+title: "Developer documentation"
+description: "Selected developer-facing docs: API references, SDKs, quickstarts, webhooks, and DX patterns."
+slug: /work/developer-documentation
+image: /img/work/developer-documentation/hero.svg
+---
+
+import Admonition from '@theme/Admonition';
+
+<div style={{display:'grid', gap:'1rem', marginBottom:'1.2rem'}}>
+  <img src="/img/work/developer-documentation/hero.svg" alt="Developer docs overview" style={{borderRadius:16, border:'1px solid var(--ifm-toc-border-color)'}} />
+  <div style={{display:'flex', flexWrap:'wrap', gap:'.5rem'}}>
+    <span className="badge badge--primary">API Reference</span>
+    <span className="badge badge--primary">SDKs</span>
+    <span className="badge badge--primary">Quickstarts</span>
+    <span className="badge badge--primary">Webhooks</span>
+    <span className="badge badge--primary">Auth</span>
+  </div>
+</div>
+
+This page curates examples of **developer documentation** I build: API references grounded in **OpenAPI**, SDK guides, quickstarts focused on **time‑to‑first‑call**, and integration topics like **webhooks** and **auth flows**. Where production artifacts aren’t public, I include **sanitized reproductions** that reflect the real structure, tone, and depth I ship.
+
+<Admonition type="note" title="Links and artifacts">
+Some items link to public endpoints or repos; others link to anonymized, standalone examples created for this portfolio.
+</Admonition>
+
+## Featured
+
+<div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:'1rem'}}>
+  <a className="card" href="/work/api-docs-migration">
+    <div className="card__image"><img src="/img/work/api-docs-migration/hero.svg" alt="API docs migration" /></div>
+    <div className="card__body">
+      <h3>API docs migration (Stoplight → ReadMe)</h3>
+      <p>Docs-as-code pipeline, OpenAPI upgrade, CI/CD auto-publish.</p>
+      <div className="margin-top--sm">
+        <span className="badge badge--primary">OpenAPI</span>
+        <span className="badge badge--primary">CI/CD</span>
+        <span className="badge badge--primary">DX</span>
+      </div>
+    </div>
+  </a>
+
+  <a className="card" href="/work/quickstart-public-api">
+    <div className="card__image"><img src="/img/work/quickstart-public-api/hero.svg" alt="Quickstart public API" /></div>
+    <div className="card__body">
+      <h3>Quickstart: Time‑to‑first‑call in 5 minutes</h3>
+      <p>Public API example (curl, Postman, Node/Python), plus troubleshooting.</p>
+      <div className="margin-top--sm">
+        <span className="badge badge--primary">Tutorial</span>
+        <span className="badge badge--primary">Onboarding</span>
+        <span className="badge badge--primary">DX</span>
+      </div>
+    </div>
+  </a>
+</div>
+
+## SDKs
+
+<div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:'1rem'}}>
+  <a className="card" href="/work/sdk-node">
+    <div className="card__image"><img src="/img/work/sdk-node/hero.svg" alt="Node SDK" /></div>
+    <div className="card__body">
+      <h3>Node.js SDK Reference (sample)</h3>
+      <p>Install, auth, client setup, pagination/retries, and examples.</p>
+      <div className="margin-top--sm">
+        <span className="badge badge--primary">Node</span>
+        <span className="badge badge--primary">NPM</span>
+        <span className="badge badge--primary">Auth</span>
+      </div>
+    </div>
+  </a>
+</div>
+
+## Integration topics
+
+<div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:'1rem'}}>
+  <a className="card" href="/work/webhooks">
+    <div className="card__image"><img src="/img/work/webhooks/hero.svg" alt="Webhooks guide" /></div>
+    <div className="card__body">
+      <h3>Webhooks guide (verification & retries)</h3>
+      <p>Signing secrets, idempotency, retry-after, and delivery semantics.</p>
+      <div className="margin-top--sm">
+        <span className="badge badge--primary">Security</span>
+        <span className="badge badge--primary">Reliability</span>
+        <span className="badge badge--primary">HTTP</span>
+      </div>
+    </div>
+  </a>
+</div>
